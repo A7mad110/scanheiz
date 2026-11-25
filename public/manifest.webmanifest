@@ -1,0 +1,21 @@
+{
+  "name": "SAAM Scan — Heizlast & Abgleich",
+  "short_name": "SAAM Scan",
+  "description": "Räume aufnehmen, Heizlast und Heizkörper erfassen, Voreinstellung berechnen, Bericht als PDF.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1014",
+  "theme_color": "#0e1014",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

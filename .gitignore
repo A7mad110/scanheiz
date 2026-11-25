@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.tmp/
+dev-http.log
+*.log
+
+# lokal / nicht ins Repository
+.env
+.env.*
+.freebuff/
+.cloud-attachments/
+
+# iOS Build-Artefakte (entstehen auf dem CI-Runner)
+ios/ScanHeiz/build/
+ios/ScanHeiz/Payload/
+ios/ScanHeiz/*.ipa
+ios/ScanHeiz/ScanHeiz.xcodeproj/
+ios/ScanHeiz/*.xcworkspace/

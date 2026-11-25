@@ -1,0 +1,52 @@
+name: ScanHeiz IPA
+
+# Baut die App auf einem kostenlosen macOS-Runner und legt eine unsignierte IPA ab.
+# Diese IPA wird auf dem Windows-PC mit Sideloadly und einer kostenlosen Apple ID signiert.
+on:
+  push:
+    paths:
+      - 'ios/ScanHeiz/**'
+      - '.github/workflows/ios-ipa.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt erzeugen
+        working-directory: ios/ScanHeiz
+        run: xcodegen generate
+
+      - name: Bauen (ohne Signatur)
+        working-directory: ios/ScanHeiz
+        run: |
+          xcodebuild \
+            -project ScanHeiz.xcodeproj \
+            -scheme ScanHeiz \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: IPA packen
+        working-directory: ios/ScanHeiz
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/ScanHeiz.app Payload/
+          zip -qr ScanHeiz.ipa Payload
+          ls -lh ScanHeiz.ipa
+
+      - name: IPA als Artifact hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScanHeiz-ipa
+          path: ios/ScanHeiz/ScanHeiz.ipa
+          if-no-files-found: error
