@@ -21,6 +21,7 @@ targets:
         PRODUCT_NAME: ScanHeiz
         PRODUCT_BUNDLE_IDENTIFIER: com.saam.scanheiz
         INFOPLIST_FILE: Sources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
