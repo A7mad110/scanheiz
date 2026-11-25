@@ -103,7 +103,7 @@ struct ScannerScreen: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            RoomCaptureViewWrapper(view: scanner.view)
+            ScannerView(controller: scanner)
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {

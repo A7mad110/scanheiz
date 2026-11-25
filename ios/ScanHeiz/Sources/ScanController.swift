@@ -1,20 +1,24 @@
+import Combine
 import Foundation
 import RoomPlan
 import SwiftUI
 
-/// Hält die RoomCaptureView und liefert das fertige CapturedRoom.
-final class ScanController: NSObject, ObservableObject {
-    @Published var view: RoomCaptureView
+/// RoomCaptureViewDelegate erbt von NSCoding — deshalb ist der Controller ein
+/// UIViewController (das NSCoding bereits erfüllt) und hält die Kamera-View.
+final class ScanController: UIViewController, ObservableObject, RoomCaptureViewDelegate {
     @Published var isScanning = false
     @Published var finished: CapturedRoom?
     @Published var errorText: String?
 
+    private let captureView = RoomCaptureView(frame: .zero)
     private let configuration = RoomCaptureSession.Configuration()
 
-    override init() {
-        let captureView = RoomCaptureView(frame: .zero)
+    override func loadView() {
         view = captureView
-        super.init()
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
         captureView.delegate = self
     }
 
@@ -22,16 +26,14 @@ final class ScanController: NSObject, ObservableObject {
         finished = nil
         errorText = nil
         isScanning = true
-        view.captureSession.run(configuration: configuration)
+        captureView.captureSession.run(configuration: configuration)
     }
 
     func stop() {
-        view.captureSession.stop()
+        captureView.captureSession.stop()
         isScanning = false
     }
-}
 
-extension ScanController: RoomCaptureViewDelegate {
     func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool {
         if let error = error {
             errorText = error.localizedDescription
@@ -48,13 +50,13 @@ extension ScanController: RoomCaptureViewDelegate {
     }
 }
 
-/// SwiftUI-Wrapper für die RoomPlan-Kamera.
-struct RoomCaptureViewWrapper: UIViewRepresentable {
-    let view: RoomCaptureView
+/// SwiftUI-Wrapper für den Scan-Controller.
+struct ScannerView: UIViewControllerRepresentable {
+    let controller: ScanController
 
-    func makeUIView(context: Context) -> RoomCaptureView {
-        view
+    func makeUIViewController(context: Context) -> ScanController {
+        controller
     }
 
-    func updateUIView(_ uiView: RoomCaptureView, context: Context) {}
+    func updateUIViewController(_ uiViewController: ScanController, context: Context) {}
 }
