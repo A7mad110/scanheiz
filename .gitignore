@@ -16,3 +16,6 @@ ios/ScanHeiz/Payload/
 ios/ScanHeiz/*.ipa
 ios/ScanHeiz/ScanHeiz.xcodeproj/
 ios/ScanHeiz/*.xcworkspace/
+
+# lokal signiertes Build-Artefakt
+ScanHeiz.ipa
