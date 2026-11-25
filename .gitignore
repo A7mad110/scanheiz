@@ -19,3 +19,6 @@ ios/ScanHeiz/*.xcworkspace/
 
 # lokal signiertes Build-Artefakt
 ScanHeiz.ipa
+
+# Installer-Reste
+*.msi
