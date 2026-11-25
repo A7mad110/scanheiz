@@ -6,6 +6,19 @@ export default function Report({ project, rows, totals }) {
   const u = uValues(project)
   const mitDaten = rows.filter((r) => r.room.flaeche || (r.room.hk || []).length)
   const baujahr = BAUALTER.find((b) => b.key === project.baujahr)?.de || '—'
+  const raumName = (room) => room.bezeichnung || roomType(room.raumtyp).de
+
+  // Heizkörper-Einsatzliste: eine Zeile je Heizkörper
+  const ventile = rows.flatMap(({ room, c }) =>
+    c.radiators.map((r, i) => ({
+      id: r.id || `${room.id}-${i}`,
+      bezeichnung: `${room.etage} · ${raumName(room)} · Typ ${r.typ} ${r.laenge}×${r.hoehe}`,
+      watt: (c.qLoad || 0) * (r.share || 0),
+      normwatt: r.qn || 0,
+      preset: r.preset || '—',
+      ventil: r.valveLabel || '—',
+    })),
+  )
 
   return (
     <div className="print-only">
@@ -18,7 +31,66 @@ export default function Report({ project, rows, totals }) {
         {VALVES[project.valve]?.label || '—'}
       </p>
 
-      <h2>1. Raumweise Heizlast (vereinfachtes Hüllflächenverfahren)</h2>
+      <h2>1. Einsatzliste der Ventile</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Bezeichnung</th>
+            <th>Watt</th>
+            <th>Normwatt</th>
+            <th>Einst.</th>
+            <th>Ventilbezeichnung</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ventile.map((v) => (
+            <tr key={v.id}>
+              <td>{v.bezeichnung}</td>
+              <td>{fmt(v.watt)}</td>
+              <td>{fmt(v.normwatt)}</td>
+              <td className="std">{v.preset}</td>
+              <td>{v.ventil}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Summe</td>
+            <td>{fmt(ventile.reduce((s, v) => s + v.watt, 0))}</td>
+            <td>{fmt(ventile.reduce((s, v) => s + v.normwatt, 0))}</td>
+            <td />
+            <td />
+          </tr>
+        </tfoot>
+      </table>
+      <p className="note">
+        Einst. = Voreinstellwert des Thermostatventils bei Δp = {project.dp} kPa. Watt = benötigte
+        Heizlast des Raums, Normwatt = Nennleistung des Heizkörpers bei 75/65/20 °C.
+      </p>
+
+      <h2>2. Einsatzliste Pumpen/Zubehör</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pumpe</th>
+            <th>vp [m³/h]</th>
+            <th>dp [mbar]</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pumpe #1</td>
+            <td>{fmt(totals.flow / 1000, 2)}</td>
+            <td>{fmt(Number(project.dp) * 10)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p className="note">
+        vp = Gesamtvolumenstrom {fmt(totals.flow)} l/h · dp aus dem eingestellten Ventil-Δp von{' '}
+        {project.dp} kPa. Empfohlene Anbindung DN 20.
+      </p>
+
+      <h2>3. Raumweise Heizlast (vereinfachtes Hüllflächenverfahren)</h2>
       <table>
         <thead>
           <tr>
@@ -37,7 +109,7 @@ export default function Report({ project, rows, totals }) {
           {mitDaten.map(({ room, c }) => (
             <tr key={room.id}>
               <td>{room.etage}</td>
-              <td>{room.bezeichnung || roomType(room.raumtyp).de}</td>
+              <td>{raumName(room)}</td>
               <td>{fmt(room.flaeche, 1)}</td>
               <td>{c.ti}</td>
               <td>{fmt(c.qLoad)}</td>
@@ -64,7 +136,7 @@ export default function Report({ project, rows, totals }) {
         </tfoot>
       </table>
 
-      <h2>2. Heizflächen und Voreinstellwerte</h2>
+      <h2>4. Heizflächen und Voreinstellwerte</h2>
       <table>
         <thead>
           <tr>
@@ -82,7 +154,7 @@ export default function Report({ project, rows, totals }) {
           {rows.flatMap(({ room, c }) =>
             c.radiators.map((r, i) => (
               <tr key={r.id || i}>
-                <td>{room.bezeichnung || roomType(room.raumtyp).de}</td>
+                <td>{raumName(room)}</td>
                 <td>
                   Typ {r.typ} · {r.laenge}×{r.hoehe} mm
                 </td>
@@ -98,7 +170,7 @@ export default function Report({ project, rows, totals }) {
         </tbody>
       </table>
 
-      <h2>3. Eignung für den Wärmepumpenbetrieb</h2>
+      <h2>5. Eignung für den Wärmepumpenbetrieb</h2>
       <table>
         <thead>
           <tr>
@@ -115,7 +187,7 @@ export default function Report({ project, rows, totals }) {
             const wp = wpCheckRoom(room, project)
             return (
               <tr key={room.id}>
-                <td>{room.bezeichnung || roomType(room.raumtyp).de}</td>
+                <td>{raumName(room)}</td>
                 <td>{fmt(c.qLoad)}</td>
                 <td>{fmt(wp[0]?.q)}</td>
                 <td>{fmt((wp[0]?.cover || 0) * 100)}</td>
@@ -127,7 +199,7 @@ export default function Report({ project, rows, totals }) {
         </tbody>
       </table>
 
-      <h2>4. Zusammenfassung</h2>
+      <h2>6. Zusammenfassung</h2>
       <table>
         <tbody>
           <tr>

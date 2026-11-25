@@ -18,6 +18,14 @@ struct ScannedWall: Codable, Identifiable, Hashable {
     var fenster: Int = 0
 }
 
+struct ScannedRadiator: Codable, Identifiable, Hashable {
+    var id = UUID()
+    var typ: String = "22"
+    var laenge: Double = 1200
+    var hoehe: Double = 600
+    var anzahl: Int = 1
+}
+
 struct ScannedRoom: Codable, Identifiable, Hashable {
     var id = UUID()
     var name: String
@@ -26,12 +34,20 @@ struct ScannedRoom: Codable, Identifiable, Hashable {
     var waende: [ScannedWall]
     var fenster: [ScannedWindow]
     var tueren: [ScannedWindow]
+    var radiators: [ScannedRadiator]? = []
 }
 
 struct ScanExport: Codable {
     var source = "scanheiz-ios"
-    var version = 1
+    var version = 2
     var rooms: [ScannedRoom]
+}
+
+// Auswahlwerte für die Heizkörper-Erfassung (Bauart nach DIN, mm)
+enum HKOptions {
+    static let typen = ["10", "11", "20", "21", "22", "30", "33"]
+    static let laengen: [Double] = [400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000]
+    static let hoehen: [Double] = [200, 300, 400, 500, 600, 700, 900]
 }
 
 // MARK: - Umrechnung CapturedRoom -> ScanHeiz-Daten
@@ -88,7 +104,9 @@ enum ScanMapper {
             hoehe: round2(height),
             waende: walls,
             fenster: windows,
-            tueren: doors
+            tueren: doors,
+            // LiDAR erkennt keine Heizkörper -> ein Standard-Eintrag, den man prüft.
+            radiators: [ScannedRadiator()]
         )
     }
 

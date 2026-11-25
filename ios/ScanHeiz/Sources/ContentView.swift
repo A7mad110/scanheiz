@@ -52,8 +52,8 @@ struct ContentView: View {
                                 Text(room.name).font(.headline)
                                 Text(
                                     L.t(
-                                        "\(fmt1(room.flaeche)) m² · \(room.waende.count) Wände · \(room.fenster.count) Fenster",
-                                        "\(fmt1(room.flaeche)) م² · \(room.waende.count) جدران · \(room.fenster.count) شبابيك",
+                                        "\(fmt1(room.flaeche)) m² · \(room.waende.count) Wände · \(room.fenster.count) Fenster · \((room.radiators ?? []).count) Heizkörper",
+                                        "\(fmt1(room.flaeche)) م² · \(room.waende.count) جدران · \(room.fenster.count) شبابيك · \((room.radiators ?? []).count) شوفاجات",
                                         lang
                                     )
                                 )
@@ -259,9 +259,103 @@ struct RoomReview: View {
                         .monospacedDigit()
                 }
             }
+
+            Section {
+                if heaters.isEmpty {
+                    Text(L.t("kein Heizkörper erfasst", "ما في شوفاج مسجّل", lang))
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(heaters) { heater in
+                    RadiatorRow(radiator: binding(for: heater.id), lang: lang) {
+                        room.radiators = heaters.filter { $0.id != heater.id }
+                    }
+                }
+                Button {
+                    room.radiators = heaters + [ScannedRadiator()]
+                } label: {
+                    Label(L.t("Heizkörper hinzufügen", "أضف شوفاج", lang), systemImage: "plus.circle")
+                }
+            } header: {
+                Text(L.t("Heizkörper", "الشوفاجات", lang))
+            } footer: {
+                Text(
+                    L.t(
+                        "LiDAR erkennt keine Heizkörper. Bitte Bauart, Höhe und Länge hier eintragen — daraus entsteht später die Einstellung.",
+                        "الليزر ما بيعرف الشوفاج. عبّي النوع والارتفاع والطول هون — ومنها بيطلع التعيين (Einstellung).",
+                        lang
+                    )
+                )
+            }
         }
         .navigationTitle(room.name)
         .environment(\.layoutDirection, lang.layoutDirection)
+    }
+
+    private var heaters: [ScannedRadiator] { room.radiators ?? [] }
+
+    private func binding(for id: UUID) -> Binding<ScannedRadiator> {
+        Binding(
+            get: { heaters.first(where: { $0.id == id }) ?? ScannedRadiator() },
+            set: { updated in
+                var list = heaters
+                if let index = list.firstIndex(where: { $0.id == id }) {
+                    list[index] = updated
+                } else {
+                    list.append(updated)
+                }
+                room.radiators = list
+            }
+        )
+    }
+}
+
+// MARK: - Heizkörper-Zeile
+
+struct RadiatorRow: View {
+    @Binding var radiator: ScannedRadiator
+    let lang: AppLang
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Typ \(radiator.typ)")
+                    .font(.subheadline.bold())
+                Spacer()
+                Button(role: .destructive, action: onDelete) {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Picker(L.t("Bauart", "النوع", lang), selection: $radiator.typ) {
+                ForEach(HKOptions.typen, id: \.self) { typ in
+                    Text("Typ \(typ)").tag(typ)
+                }
+            }
+            .pickerStyle(.menu)
+
+            Picker(L.t("Länge", "الطول", lang), selection: $radiator.laenge) {
+                ForEach(HKOptions.laengen, id: \.self) { laenge in
+                    Text("\(Int(laenge)) mm").tag(laenge)
+                }
+            }
+            .pickerStyle(.menu)
+
+            Picker(L.t("Höhe", "الارتفاع", lang), selection: $radiator.hoehe) {
+                ForEach(HKOptions.hoehen, id: \.self) { hoehe in
+                    Text("\(Int(hoehe)) mm").tag(hoehe)
+                }
+            }
+            .pickerStyle(.menu)
+
+            Stepper(
+                L.t("Anzahl", "العدد", lang) + ": \(radiator.anzahl)",
+                value: $radiator.anzahl,
+                in: 1...6
+            )
+        }
+        .padding(.vertical, 2)
     }
 }
 

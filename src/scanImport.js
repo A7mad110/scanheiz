@@ -13,6 +13,27 @@ function windows(list) {
   }))
 }
 
+/**
+ * Heizkörper aus dem Scan übernehmen. LiDAR erkennt sie nicht — die App fragt
+ * Bauart/Höhe/Länge nach dem Scannen ab. Fehlt alles, bleibt ein Standard-Eintrag.
+ */
+function radiators(list) {
+  const mapped = (list || []).map((h) => {
+    const anzahl = Math.max(1, Math.round(Number(h.anzahl ?? h.count) || 1))
+    return Array.from({ length: anzahl }, () => ({
+      id: uid(),
+      typ: String(h.typ ?? '22'),
+      laenge: s(h.laenge ?? h.length, '1200'),
+      hoehe: s(h.hoehe ?? h.height, '600'),
+      anschuss: 'Eck',
+      ventilModell: 'projekt',
+      zuleitung: '',
+    }))
+  })
+  const flat = mapped.flat()
+  return flat.length ? flat : [newHk()]
+}
+
 /** Liest den Export von ScanHeiz (iOS) und macht daraus Raum-Entwürfe. */
 export function roomsFromScan(json) {
   const source = Array.isArray(json) ? json : json?.rooms
@@ -38,6 +59,6 @@ export function roomsFromScan(json) {
     dachLaenge: '',
     dachHoehe: '',
     drempel: '',
-    hk: [newHk()],
+    hk: radiators(r.radiators ?? r.hk),
   }))
 }
