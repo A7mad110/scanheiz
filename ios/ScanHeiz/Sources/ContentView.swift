@@ -39,6 +39,24 @@ struct ContentView: View {
                     }
                 }
 
+                Section {
+                    Picker(L.t("Sprache", "اللغة", lang), selection: $langRaw) {
+                        Text("Deutsch").tag("de")
+                        Text("العربية").tag("ar")
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text(L.t("Sprache", "اللغة", lang))
+                } footer: {
+                    Text(
+                        L.t(
+                            "Deutsch ist die Standardsprache. Die Auswahl wird auf dem Gerät gespeichert.",
+                            "الألماني هو اللغة الأساسية، والاختيار بينحفظ على الجهاز.",
+                            lang
+                        )
+                    )
+                }
+
                 Section(L.t("Räume", "الغرف", lang)) {
                     if rooms.isEmpty {
                         Text(L.t("Noch kein Raum gescannt.", "ما في غرف ممسوحة بعد.", lang))
